@@ -7,32 +7,24 @@ from pyrogram import Client
 from pyrogram.types import InlineKeyboardMarkup
 from pytgcalls import PyTgCalls
 
-# --- SAFE IMPORTS (v2.2.0 Compatibility) ---
-try:
-    # Try latest v2.2.0 location
-    from pytgcalls.types import AudioPiped, AudioVideoPiped, HighQualityAudio, MediumQualityVideo, Update
-except ImportError:
-    # Try older v2.x location
-    from pytgcalls.types.input_stream import AudioPiped, AudioVideoPiped
-    from pytgcalls.types.input_stream.quality import HighQualityAudio, MediumQualityVideo
-    from pytgcalls.types import Update
+# --- py-tgcalls v2.2.0 Ke Sahi Imports ---
+from pytgcalls.types import (
+    AudioPiped,
+    AudioVideoPiped,
+    HighQualityAudio,
+    MediumQualityVideo,
+    Update,
+)
+from pytgcalls.types.stream import StreamAudioEnded
+from pytgcalls.exceptions import (
+    AlreadyJoined,
+    NoActiveGroupCall,
+    TelegramServerError,
+)
 
-try:
-    from pytgcalls.types.stream import StreamAudioEnded
-except ImportError:
-    StreamAudioEnded = Exception
-
-try:
-    from pytgcalls.exceptions import AlreadyJoined, NoActiveGroupCall, TelegramServerError
-    AlreadyJoinedError = AlreadyJoined
-except ImportError:
-    try:
-        from pytgcalls.exceptions import AlreadyJoinedError, NoActiveGroupCall, TelegramServerError
-    except ImportError:
-        AlreadyJoinedError = Exception
-        NoActiveGroupCall = Exception
-        TelegramServerError = Exception
-# --------------------------------------------
+# Purane code ke liye compatibility
+AlreadyJoinedError = AlreadyJoined
+# ---------------------------------------
 
 import config
 from BIGFM import LOGGER, YouTube, app
@@ -67,19 +59,19 @@ async def _clear_(chat_id):
 class Call(PyTgCalls):
     def __init__(self):
         self.userbot1 = Client(name="AviaxAss1", api_id=config.API_ID, api_hash=config.API_HASH, session_string=str(config.STRING1))
-        self.one = PyTgCalls(self.userbot1, cache_duration=100)
+        self.one = PyTgCalls(self.userbot1)
         
         self.userbot2 = Client(name="AviaxAss2", api_id=config.API_ID, api_hash=config.API_HASH, session_string=str(config.STRING2))
-        self.two = PyTgCalls(self.userbot2, cache_duration=100)
+        self.two = PyTgCalls(self.userbot2)
         
         self.userbot3 = Client(name="AviaxAss3", api_id=config.API_ID, api_hash=config.API_HASH, session_string=str(config.STRING3))
-        self.three = PyTgCalls(self.userbot3, cache_duration=100)
+        self.three = PyTgCalls(self.userbot3)
         
         self.userbot4 = Client(name="AviaxAss4", api_id=config.API_ID, api_hash=config.API_HASH, session_string=str(config.STRING4))
-        self.four = PyTgCalls(self.userbot4, cache_duration=100)
+        self.four = PyTgCalls(self.userbot4)
         
         self.userbot5 = Client(name="AviaxAss5", api_id=config.API_ID, api_hash=config.API_HASH, session_string=str(config.STRING5))
-        self.five = PyTgCalls(self.userbot5, cache_duration=100)
+        self.five = PyTgCalls(self.userbot5)
 
     async def pause_stream(self, chat_id: int):
         assistant = await group_assistant(self, chat_id)
@@ -97,16 +89,27 @@ class Call(PyTgCalls):
         except:
             pass
 
+    async def stop_stream_force(self, chat_id: int):
+        for ass in [self.one, self.two, self.three, self.four, self.five]:
+            try:
+                await ass.leave_group_call(chat_id)
+            except:
+                pass
+        await _clear_(chat_id)
+
     async def speedup_stream(self, chat_id: int, file_path, speed, playing):
         assistant = await group_assistant(self, chat_id)
-        # Simplified for compatibility
         base = os.path.basename(file_path)
         out = os.path.join(os.getcwd(), "playback", str(speed), base)
-        dur = await asyncio.get_event_loop().run_in_executor(None, check_duration, out if os.path.exists(out) else file_path)
+        # Assuming speed logic exists in your speed_converter
+        dur = await asyncio.get_event_loop().run_in_executor(None, check_duration, file_path)
         played, con_seconds = speed_converter(playing[0]["played"], speed)
         duration = seconds_to_min(int(dur))
         
-        stream = AudioVideoPiped(out, HighQualityAudio(), MediumQualityVideo(), additional_ffmpeg_parameters=f"-ss {played} -to {duration}") if playing[0]["streamtype"] == "video" else AudioPiped(out, HighQualityAudio(), additional_ffmpeg_parameters=f"-ss {played} -to {duration}")
+        if playing[0]["streamtype"] == "video":
+            stream = AudioVideoPiped(file_path, HighQualityAudio(), MediumQualityVideo(), additional_ffmpeg_parameters=f"-ss {played} -to {duration}")
+        else:
+            stream = AudioPiped(file_path, HighQualityAudio(), additional_ffmpeg_parameters=f"-ss {played} -to {duration}")
         await assistant.change_stream(chat_id, stream)
 
     async def stream_call(self, link):
@@ -130,6 +133,8 @@ class Call(PyTgCalls):
             raise AssistantErr(_["call_10"])
         await add_active_chat(chat_id)
         await music_on(chat_id)
+        if video:
+            await add_active_video_chat(chat_id)
 
     async def change_stream(self, client, chat_id):
         check = db.get(chat_id)
@@ -148,12 +153,25 @@ class Call(PyTgCalls):
         except:
             pass
 
+    async def ping(self):
+        pings = []
+        for obj in [self.one, self.two, self.three, self.four, self.five]:
+            try:
+                pings.append(await obj.ping)
+            except:
+                pass
+        return str(round(sum(pings) / len(pings), 3)) if pings else "0"
+
     async def start(self):
         for ass in [self.one, self.two, self.three, self.four, self.five]:
             await ass.start()
 
     async def decorators(self):
         @self.one.on_stream_end()
+        @self.two.on_stream_end()
+        @self.three.on_stream_end()
+        @self.four.on_stream_end()
+        @self.five.on_stream_end()
         async def handler(client, update: Update):
             if isinstance(update, StreamAudioEnded):
                 await self.change_stream(client, update.chat_id)
