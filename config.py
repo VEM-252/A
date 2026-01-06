@@ -85,15 +85,15 @@ AUTO_LEAVING_ASSISTANT = bool(os.getenv("AUTO_LEAVING_ASSISTANT", False))
 # 🖼️ Image URLs (Can be customized)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-START_IMG_URL = os.getenv("START_IMG_URL", "https://graph.org/file/cdac0910ad60867e08cd2-eec1ead13b60905f29.jpg")
-PING_IMG_URL = os.getenv("PING_IMG_URL", "https://graph.org/file/cdac0910ad60867e08cd2-eec1ead13b60905f29.jpg")
-PLAYLIST_IMG_URL = "https://graph.org/file/cdac0910ad60867e08cd2-eec1ead13b60905f29.jpg"
+START_IMG_URL = os.getenv("START_IMG_URL", "https://graph.org/file/5e7e5d40bc2f6bb9868dd-e272c7f0ec8ff537bf.jpg")
+PING_IMG_URL = os.getenv("PING_IMG_URL", "https://graph.org/file/5e7e5d40bc2f6bb9868dd-e272c7f0ec8ff537bf.jpg")
+PLAYLIST_IMG_URL = "https://graph.org/file/5e7e5d40bc2f6bb9868dd-e272c7f0ec8ff537bf.jpg"
 STATS_IMG_URL = "https://graph.org/file/cdac0910ad60867e08cd2-eec1ead13b60905f29.jpg"
 TELEGRAM_AUDIO_URL = "https://graph.org/file/cdac0910ad60867e08cd2-eec1ead13b60905f29.jpg"
 TELEGRAM_VIDEO_URL = "https://graph.org/file/cdac0910ad60867e08cd2-eec1ead13b60905f29.jpg"
 STREAM_IMG_URL = "https://graph.org/file/cdac0910ad60867e08cd2-eec1ead13b60905f29.jpg"
 SOUNCLOUD_IMG_URL = "https://graph.org/file/cdac0910ad60867e08cd2-eec1ead13b60905f29.jpg"
-YOUTUBE_IMG_URL = "https://graph.org/file/cdac0910ad60867e08cd2-eec1ead13b60905f29.jpg"
+YOUTUBE_IMG_URL = "https://graph.org/file/5e7e5d40bc2f6bb9868dd-e272c7f0ec8ff537bf.jpg"
 SPOTIFY_ARTIST_IMG_URL = "https://graph.org/file/cdac0910ad60867e08cd2-eec1ead13b60905f29.jpg"
 SPOTIFY_ALBUM_IMG_URL = "https://graph.org/file/cdac0910ad60867e08cd2-eec1ead13b60905f29.jpg"
 SPOTIFY_PLAYLIST_IMG_URL = "https://graph.org/file/cdac0910ad60867e08cd2-eec1ead13b60905f29.jpg"
