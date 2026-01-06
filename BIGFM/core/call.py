@@ -7,24 +7,32 @@ from pyrogram import Client
 from pyrogram.types import InlineKeyboardMarkup
 from pytgcalls import PyTgCalls
 
-# --- Naye Version (v2.2.0) ke Imports ---
-from pytgcalls.types import (
-    AudioPiped,
-    AudioVideoPiped,
-    HighQualityAudio,
-    MediumQualityVideo,
-    Update,
-)
-from pytgcalls.types.stream import StreamAudioEnded
-from pytgcalls.exceptions import (
-    AlreadyJoined,
-    NoActiveGroupCall,
-    TelegramServerError,
-)
+# --- SAFE IMPORTS (v2.2.0 Compatibility) ---
+try:
+    # Try latest v2.2.0 location
+    from pytgcalls.types import AudioPiped, AudioVideoPiped, HighQualityAudio, MediumQualityVideo, Update
+except ImportError:
+    # Try older v2.x location
+    from pytgcalls.types.input_stream import AudioPiped, AudioVideoPiped
+    from pytgcalls.types.input_stream.quality import HighQualityAudio, MediumQualityVideo
+    from pytgcalls.types import Update
 
-# Purane code ke sath compatibility ke liye
-AlreadyJoinedError = AlreadyJoined 
-# ---------------------------------------
+try:
+    from pytgcalls.types.stream import StreamAudioEnded
+except ImportError:
+    StreamAudioEnded = Exception
+
+try:
+    from pytgcalls.exceptions import AlreadyJoined, NoActiveGroupCall, TelegramServerError
+    AlreadyJoinedError = AlreadyJoined
+except ImportError:
+    try:
+        from pytgcalls.exceptions import AlreadyJoinedError, NoActiveGroupCall, TelegramServerError
+    except ImportError:
+        AlreadyJoinedError = Exception
+        NoActiveGroupCall = Exception
+        TelegramServerError = Exception
+# --------------------------------------------
 
 import config
 from BIGFM import LOGGER, YouTube, app
@@ -58,7 +66,6 @@ async def _clear_(chat_id):
 
 class Call(PyTgCalls):
     def __init__(self):
-        # Userbot Clients Setup
         self.userbot1 = Client(name="AviaxAss1", api_id=config.API_ID, api_hash=config.API_HASH, session_string=str(config.STRING1))
         self.one = PyTgCalls(self.userbot1, cache_duration=100)
         
@@ -92,10 +99,9 @@ class Call(PyTgCalls):
 
     async def speedup_stream(self, chat_id: int, file_path, speed, playing):
         assistant = await group_assistant(self, chat_id)
-        # ... (Speedup logic same as before, updated with new stream classes)
+        # Simplified for compatibility
         base = os.path.basename(file_path)
         out = os.path.join(os.getcwd(), "playback", str(speed), base)
-        # (Assuming file processing is handled)
         dur = await asyncio.get_event_loop().run_in_executor(None, check_duration, out if os.path.exists(out) else file_path)
         played, con_seconds = speed_converter(playing[0]["played"], speed)
         duration = seconds_to_min(int(dur))
@@ -105,7 +111,6 @@ class Call(PyTgCalls):
 
     async def stream_call(self, link):
         assistant = await group_assistant(self, config.LOG_GROUP_ID)
-        # Fixed: StreamType removed
         await assistant.join_group_call(config.LOG_GROUP_ID, AudioVideoPiped(link))
         await asyncio.sleep(0.2)
         await assistant.leave_group_call(config.LOG_GROUP_ID)
@@ -116,7 +121,6 @@ class Call(PyTgCalls):
         _ = get_string(language)
         stream = AudioVideoPiped(link, HighQualityAudio(), MediumQualityVideo()) if video else AudioPiped(link, HighQualityAudio())
         try:
-            # Fixed: StreamType removed
             await assistant.join_group_call(chat_id, stream)
         except NoActiveGroupCall:
             raise AssistantErr(_["call_8"])
