@@ -23,10 +23,10 @@ from BIGFM.utils.inline import help_pannel, private_panel, start_panel
 from config import BANNED_USERS
 from strings import get_string
 
-# --- [ FIX: ABOUT TEXT FUNCTION WITH HTML FOR CLEAN LINKS ] ---
+# --- [ GET ABOUT TEXT ] ---
 def get_about_text():
-    DEV_USERNAME = "KIRU_OP" # Apna Username yahan likhein
-    CH_LINK = config.SUPPORT_CHANNEL # Config se channel link
+    DEV_USERNAME = "KIRU_OP" 
+    CH_LINK = config.SUPPORT_CHANNEL 
     
     return f"""
 🎧 <b>sʜʏᴧᴍ ᴠɪʙє [ 🇮🇳 | 🌸 ]</b> ɪs ᴀ ᴘᴏᴡᴇʀғᴜʟ ᴀɴᴅ ʜɪɢʜ-ᴘᴇʀғᴏʀᴍᴀɴᴄᴇ ᴛᴇʟᴇɢʀᴀᴍ ᴍᴜsɪᴄ ʙᴏᴛ ᴅᴇsɪɢɴᴇᴅ ᴛᴏ ᴅᴇʟɪᴠᴇʀ ᴄʀʏsᴛᴀʟ-ᴄᴇᴀʀ ᴀᴜᴅɪᴏ sᴛʀᴇᴀᴍɪɴɢ ɪɴ ᴠᴏɪᴄᴇ ᴄʜᴀᴛs ᴡɪᴛʜ ᴇᴀsᴇ. ᴇɴᴊᴏʏ sᴍᴏᴏᴛʜ ᴘʟᴀʏʙᴀᴄᴋ, ᴀᴅᴠᴀɴᴄᴇᴅ ᴄᴏɴᴛʀᴏʟs ᴀɴᴅ ᴀ ᴘʀᴇᴍɪᴜᴍ ᴍᴜsɪᴄ ᴇxᴘᴇʀɪᴇɴᴄᴇ ✨
@@ -48,20 +48,20 @@ def get_about_text():
 <blockquote>ɪғ ʏᴏᴜ ᴜsᴇ <b>sʜʏᴧᴍ ᴠɪʙє [ 🇮🇳 | 🌸 ]</b> ғᴏʀ ᴀɴʏ ᴘᴜʀᴘᴏsᴇ, ʏᴏᴜ ᴀɢʀᴇᴇ ᴛᴏ ᴛʜᴇ ᴛᴇʀᴍs ᴀɴᴅ ᴄᴏɴᴅɪᴛɪᴏɴs ᴡʀɪᴛᴛᴇɴ ɪɴ <code>/ᴘʀɪᴠᴀᴄʏ</code>. ᴛʜᴇ ᴘʀɪᴠᴀᴄʏ ᴘᴏʟɪᴄʏ ᴍᴀʏ ʙᴇ ᴜᴘᴅᴀᴛᴇᴅ ᴏʀ ᴄʜᴀɴɢᴇᴅ ᴀᴛ ᴀɴʏ ᴛɪᴍᴇ ᴡɪᴛʜᴏᴜᴛ ᴘʀɪᴏʀ ɴᴏᴛɪᴄᴇ.</blockquote>
 """
 
-# --- [ FIX: ABOUT CALLBACK HANDLER ] ---
+# --- [ ABOUT CALLBACK ] ---
 @app.on_callback_query(filters.regex("about_callback"))
 async def on_about_click(client, query: CallbackQuery):
     await query.answer()
     await query.edit_message_text(
         text=get_about_text(),
-        parse_mode=ParseMode.HTML, # HTML mode link chhupane ke liye zaroori hai
+        parse_mode=ParseMode.HTML,
         disable_web_page_preview=True,
         reply_markup=InlineKeyboardMarkup(
             [[InlineKeyboardButton("◁ ʙᴀᴄᴋ", callback_data="settingsback_helper")]]
         )
     )
 
-# --- [ FIX: BACK BUTTON HANDLER ] ---
+# --- [ BACK CALLBACK ] ---
 @app.on_callback_query(filters.regex("settingsback_helper"))
 async def on_back_click(client, query: CallbackQuery):
     await query.answer()
@@ -74,6 +74,7 @@ async def on_back_click(client, query: CallbackQuery):
         reply_markup=InlineKeyboardMarkup(out),
     )
 
+# --- [ START COMMAND PRIVATE ] ---
 @app.on_message(filters.command(["start"]) & filters.private & ~BANNED_USERS)
 @LanguageStart
 async def start_pm(client, message: Message, _):
@@ -85,7 +86,6 @@ async def start_pm(client, message: Message, _):
             return await message.reply_photo(
                 photo=config.START_IMG_URL,
                 caption=_["help_1"].format(config.SUPPORT_GROUP),
-                protect_content=True,
                 reply_markup=keyboard,
             )
         if name[0:3] == "sud":
@@ -105,20 +105,10 @@ async def start_pm(client, message: Message, _):
                 channel = result["channel"]["name"]
                 link = result["link"]
                 published = result["publishedTime"]
-            searched_text = _["start_6"].format(
-                title, duration, views, published, channellink, channel, app.mention
-            )
-            key = InlineKeyboardMarkup(
-                [[InlineKeyboardButton(text=_["S_B_8"], url=link),
-                  InlineKeyboardButton(text=_["S_B_9"], url=config.SUPPORT_GROUP)]]
-            )
+            searched_text = _["start_6"].format(title, duration, views, published, channellink, channel, app.mention)
+            key = InlineKeyboardMarkup([[InlineKeyboardButton(text=_["S_B_8"], url=link), InlineKeyboardButton(text=_["S_B_9"], url=config.SUPPORT_GROUP)]])
             await m.delete()
-            await app.send_photo(
-                chat_id=message.chat.id,
-                photo=thumbnail,
-                caption=searched_text,
-                reply_markup=key,
-            )
+            await app.send_photo(chat_id=message.chat.id, photo=thumbnail, caption=searched_text, reply_markup=key)
             return
     else:
         out = private_panel(_)
@@ -129,6 +119,7 @@ async def start_pm(client, message: Message, _):
             reply_markup=InlineKeyboardMarkup(out),
         )
 
+# --- [ START COMMAND GROUP ] ---
 @app.on_message(filters.command(["start"]) & filters.group & ~BANNED_USERS)
 @LanguageStart
 async def start_gp(client, message: Message, _):
@@ -139,6 +130,35 @@ async def start_gp(client, message: Message, _):
         caption=_["start_1"].format(app.mention, get_readable_time(uptime)),
         reply_markup=InlineKeyboardMarkup(out),
     )
-    return await add_served_chat(message.chat.id)
+    await add_served_chat(message.chat.id)
 
-@app.on_message 
+# --- [ WELCOME HANDLER ] ---
+@app.on_message(filters.new_chat_members, group=-1)
+async def welcome(client, message: Message):
+    for member in message.new_chat_members:
+        try:
+            language = await get_lang(message.chat.id)
+            _ = get_string(language)
+            if await is_banned_user(member.id):
+                try:
+                    await message.chat.ban_member(member.id)
+                except:
+                    pass
+            if member.id == app.id:
+                if message.chat.type != ChatType.SUPERGROUP:
+                    await message.reply_text(_["start_4"])
+                    return await app.leave_chat(message.chat.id)
+                if message.chat.id in await blacklisted_chats():
+                    await message.reply_text(_["start_5"].format(app.mention, f"https://t.me/{app.username}?start=sudolist", config.SUPPORT_GROUP), disable_web_page_preview=True)
+                    return await app.leave_chat(message.chat.id)
+
+                out = start_panel(_)
+                await message.reply_photo(
+                    photo=config.START_IMG_URL,
+                    caption=_["start_3"].format(message.from_user.first_name, app.mention, message.chat.title, app.mention),
+                    reply_markup=InlineKeyboardMarkup(out),
+                )
+                await add_served_chat(message.chat.id)
+                await message.stop_propagation()
+        except Exception as ex:
+            print(ex) 
