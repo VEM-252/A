@@ -6,13 +6,27 @@ from typing import Union
 from pyrogram import Client
 from pyrogram.types import InlineKeyboardMarkup
 from pytgcalls import PyTgCalls
-# Note: StreamType removed because it's not supported in v2.2.0+
 
-from pytgcalls.exceptions import (
-    AlreadyJoined,
-    NoActiveGroupCall,
-    TelegramServerError,
-)
+# --- SAFE EXCEPTION IMPORTS ---
+try:
+    from pytgcalls.exceptions import AlreadyJoinedError
+except ImportError:
+    try:
+        from pytgcalls.exceptions import AlreadyJoined as AlreadyJoinedError
+    except ImportError:
+        AlreadyJoinedError = Exception
+
+try:
+    from pytgcalls.exceptions import NoActiveGroupCall
+except ImportError:
+    NoActiveGroupCall = Exception
+
+try:
+    from pytgcalls.exceptions import TelegramServerError
+except ImportError:
+    TelegramServerError = Exception
+# ------------------------------
+
 from pytgcalls.types import Update
 from pytgcalls.types.input_stream import AudioPiped, AudioVideoPiped
 from pytgcalls.types.input_stream.quality import HighQualityAudio, MediumQualityVideo
@@ -274,7 +288,6 @@ class Call(PyTgCalls):
 
     async def stream_call(self, link):
         assistant = await group_assistant(self, config.LOG_GROUP_ID)
-        # Fix: stream_type removed for compatibility with v2.2.0
         await assistant.join_group_call(
             config.LOG_GROUP_ID,
             AudioVideoPiped(link),
@@ -301,9 +314,7 @@ class Call(PyTgCalls):
             )
         else:
             stream = AudioPiped(link, audio_parameters=HighQualityAudio())
-
         try:
-            # Fix: stream_type argument removed
             await assistant.join_group_call(
                 chat_id,
                 stream,
