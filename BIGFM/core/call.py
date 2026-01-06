@@ -7,24 +7,36 @@ from pyrogram import Client
 from pyrogram.types import InlineKeyboardMarkup
 from pytgcalls import PyTgCalls
 
-# --- py-tgcalls v2.2.0 Sahi Imports ---
-from pytgcalls.types import (
-    AudioPiped,
-    AudioVideoPiped,
-    HighQualityAudio,
-    MediumQualityVideo,
-    Update,
-)
-from pytgcalls.types.stream import StreamAudioEnded
-from pytgcalls.exceptions import (
-    AlreadyJoined,
-    NoActiveGroupCall,
-    TelegramServerError,
-)
+# --- SUPER SAFE DYNAMIC IMPORTS (v2.2.0 Fixed) ---
+import pytgcalls.types as pytg_types
+import pytgcalls.exceptions as pytg_ex
 
-# Compatibility ke liye purane naam
-AlreadyJoinedError = AlreadyJoined 
-# --------------------------------------
+# Module dhundne ka naya tarika (getattr se error nahi aata)
+AudioPiped = getattr(pytg_types, "AudioPiped", None)
+AudioVideoPiped = getattr(pytg_types, "AudioVideoPiped", None)
+HighQualityAudio = getattr(pytg_types, "HighQualityAudio", None)
+MediumQualityVideo = getattr(pytg_types, "MediumQualityVideo", None)
+Update = getattr(pytg_types, "Update", None)
+
+# Agar v2.2.0 mein direct na mile toh v2.0 wale folder mein check karo
+if not AudioPiped:
+    try:
+        from pytgcalls.types.input_stream import AudioPiped, AudioVideoPiped
+        from pytgcalls.types.input_stream.quality import HighQualityAudio, MediumQualityVideo
+    except ImportError:
+        pass
+
+# Stream Ended check
+try:
+    from pytgcalls.types.stream import StreamAudioEnded
+except ImportError:
+    StreamAudioEnded = Exception
+
+# Exceptions handling (Names change fix)
+AlreadyJoinedError = getattr(pytg_ex, "AlreadyJoined", getattr(pytg_ex, "AlreadyJoinedError", Exception))
+NoActiveGroupCall = getattr(pytg_ex, "NoActiveGroupCall", Exception)
+TelegramServerError = getattr(pytg_ex, "TelegramServerError", Exception)
+# --------------------------------------------------
 
 import config
 from BIGFM import LOGGER, YouTube, app
@@ -58,14 +70,19 @@ async def _clear_(chat_id):
 
 class Call(PyTgCalls):
     def __init__(self):
+        # Assistants setup
         self.userbot1 = Client(name="AviaxAss1", api_id=config.API_ID, api_hash=config.API_HASH, session_string=str(config.STRING1))
         self.one = PyTgCalls(self.userbot1)
+        
         self.userbot2 = Client(name="AviaxAss2", api_id=config.API_ID, api_hash=config.API_HASH, session_string=str(config.STRING2))
         self.two = PyTgCalls(self.userbot2)
+        
         self.userbot3 = Client(name="AviaxAss3", api_id=config.API_ID, api_hash=config.API_HASH, session_string=str(config.STRING3))
         self.three = PyTgCalls(self.userbot3)
+        
         self.userbot4 = Client(name="AviaxAss4", api_id=config.API_ID, api_hash=config.API_HASH, session_string=str(config.STRING4))
         self.four = PyTgCalls(self.userbot4)
+        
         self.userbot5 = Client(name="AviaxAss5", api_id=config.API_ID, api_hash=config.API_HASH, session_string=str(config.STRING5))
         self.five = PyTgCalls(self.userbot5)
 
@@ -96,7 +113,11 @@ class Call(PyTgCalls):
         dur = await asyncio.get_event_loop().run_in_executor(None, check_duration, file_path)
         played, con_seconds = speed_converter(playing[0]["played"], speed)
         duration = seconds_to_min(int(dur))
-        stream = AudioVideoPiped(file_path, HighQualityAudio(), MediumQualityVideo(), additional_ffmpeg_parameters=f"-ss {played} -to {duration}") if playing[0]["streamtype"] == "video" else AudioPiped(file_path, HighQualityAudio(), additional_ffmpeg_parameters=f"-ss {played} -to {duration}")
+        
+        if playing[0]["streamtype"] == "video":
+            stream = AudioVideoPiped(file_path, HighQualityAudio(), MediumQualityVideo(), additional_ffmpeg_parameters=f"-ss {played} -to {duration}")
+        else:
+            stream = AudioPiped(file_path, HighQualityAudio(), additional_ffmpeg_parameters=f"-ss {played} -to {duration}")
         await assistant.change_stream(chat_id, stream)
 
     async def stream_call(self, link):
@@ -130,24 +151,12 @@ class Call(PyTgCalls):
             if not check:
                 await _clear_(chat_id)
                 return await client.leave_group_call(chat_id)
+            
             queued = check[0]["file"]
             video = True if str(check[0]["streamtype"]) == "video" else False
             stream = AudioVideoPiped(queued, HighQualityAudio(), MediumQualityVideo()) if video else AudioPiped(queued, HighQualityAudio())
             await client.change_stream(chat_id, stream)
-        except: pass
+        except:
+            pass
 
-    async def start(self):
-        for ass in [self.one, self.two, self.three, self.four, self.five]:
-            await ass.start()
-
-    async def decorators(self):
-        @self.one.on_stream_end()
-        @self.two.on_stream_end()
-        @self.three.on_stream_end()
-        @self.four.on_stream_end()
-        @self.five.on_stream_end()
-        async def handler(client, update: Update):
-            if isinstance(update, StreamAudioEnded):
-                await self.change_stream(client, update.chat_id)
-
-Aviax = Call()
+    asyn
