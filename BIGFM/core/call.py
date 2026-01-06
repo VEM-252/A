@@ -36,6 +36,7 @@ from BIGFM.utils.formatters import check_duration, seconds_to_min, speed_convert
 from BIGFM.utils.inline.play import stream_markup
 from BIGFM.utils.stream.autoclear import auto_clean
 from BIGFM.utils.thumbnails import gen_thumb
+from strings import get_string
 
 autoend = {}
 counter = {}
@@ -390,7 +391,7 @@ class Call(PyTgCalls):
                         original_chat_id,
                         text=_["call_6"],
                     )
-                img = await get_thumb(videoid)
+                img = await gen_thumb(videoid)
                 button = stream_markup(_, chat_id)
                 run = await app.send_photo(
                     chat_id=original_chat_id,
@@ -436,7 +437,7 @@ class Call(PyTgCalls):
                         original_chat_id,
                         text=_["call_6"],
                     )
-                img = await get_thumb(videoid)
+                img = await gen_thumb(videoid)
                 button = stream_markup(_, chat_id)
                 await mystic.delete()
                 run = await app.send_photo(
@@ -524,7 +525,7 @@ class Call(PyTgCalls):
                     db[chat_id][0]["mystic"] = run
                     db[chat_id][0]["markup"] = "tg"
                 else:
-                    img = await get_thumb(videoid)
+                    img = await gen_thumb(videoid)
                     button = stream_markup(_, chat_id)
                     run = await app.send_photo(
                         chat_id=original_chat_id,
