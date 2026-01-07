@@ -8,11 +8,12 @@ from pyrogram.types import (
     Message,
 )
 
-# Aapke bot ke imports
+# Bot ke main imports
 from BIGFM import app 
 from BIGFM.core.mongo import mongodb
+from config import OWNER_ID  # Owner ki list config se
 
-# --- DATABASE LOGIC (Isi file mein) ---
+# --- DATABASE LOGIC ---
 nightdb = mongodb.nightmode
 
 async def get_nightchats() -> list:
@@ -77,6 +78,10 @@ add_buttons = InlineKeyboardMarkup(
 # --- COMMANDS ---
 @app.on_message(filters.command("nightmode") & filters.group)
 async def _nightmode(_, message: Message):
+    # Sirf Bot Owner hi setup kar sakta hai
+    if message.from_user.id not in OWNER_ID:
+        return await message.reply_text("❌ **Sɪʀғ Mᴇʀᴇ Mᴀʟɪᴋ (Bᴏᴛ Oᴡɴᴇʀ) ʜɪ ɴɪɢʜᴛᴍᴏᴅᴇ ᴄᴏɴᴛʀᴏʟ ᴋᴀʀ sᴀᴋᴛᴇ ʜᴀɪɴ.**")
+
     return await message.reply_photo(
         photo="https://telegra.ph//file/06649d4d0bbf4285238ee.jpg",
         caption="**ᴄʟɪᴄᴋ ᴏɴ ᴛʜᴇ ʙᴇʟᴏᴡ ʙᴜᴛᴛᴏɴ ᴛᴏ ᴇɴᴀʙʟᴇ ᴏʀ ᴅɪsᴀʙʟᴇ ɴɪɢʜᴛᴍᴏᴅᴇ ɪɴ ᴛʜɪs ᴄʜᴀᴛ.**",
@@ -90,10 +95,8 @@ async def nightcb(_, query: CallbackQuery):
     chat_id = query.message.chat.id
     user_id = query.from_user.id
     
-    # Admin check
-    user = await app.get_chat_member(chat_id, user_id)
-    if user.status not in [enums.ChatMemberStatus.ADMINISTRATOR, enums.ChatMemberStatus.OWNER]:
-        return await query.answer("Aap admin nahi hain!", show_alert=True)
+    if user_id not in OWNER_ID:
+        return await query.answer("Ye permission sirf bot owner ke paas hai!", show_alert=True)
 
     check_night = await nightdb.find_one({"chat_id": chat_id})
 
@@ -121,7 +124,7 @@ async def start_nightmode():
             await app.send_photo(
                 chat_id,
                 photo="https://telegra.ph//file/06649d4d0bbf4285238ee.jpg",
-                caption="**ᴍᴀʏ ᴛʜᴇ ᴀɴɢᴇʟs ғʀᴏᴍ ʜᴇᴀᴠᴇɴ ʙʀɪɴɢ ᴛʜᴇ sᴡᴇᴇᴛᴇsᴛ ᴏғ ᴀʟʟ ᴅʀᴇᴀᴍs ғᴏʀ ʏᴏᴜ.\n\nɢʀᴏᴜᴘ ɪs ᴄʟᴏsɪɴɢ ɢᴏᴏᴅ ɴɪɢʜᴛ ᴇᴠᴇʀʏᴏɴᴇ !**",
+                caption="**ᴍᴀʏ ᴛʜᴇ ᴀɴɢᴇʟs ғʀᴏᴍ ʜᴇᴀᴠᴇɴ ʙʀɪɴɢ ᴛʜᴇ sᴡᴇᴇᴛᴇsᴛ ᴏғ ᴀʟʟ ᴅʀᴇᴀᴍs ғᴏʀ ʏᴏᴜ. ᴍᴀʏ ʏᴏᴜ ʜᴀᴠᴇ ʟᴏɴɢ ᴀɴᴅ ʙʟɪssғᴜʟ sʟᴇᴇᴘ ғᴜʟʟ ᴏғ ʜᴀᴘᴘʏ ᴅʀᴇᴀᴍs.\n\nɢʀᴏᴜᴘ ɪs ᴄʟᴏsɪɴɢ ɢᴏᴏᴅ ɴɪɢʜᴛ ᴇᴠᴇʀʏᴏɴᴇ !**",
                 reply_markup=add_buttons,
             )
             await app.set_chat_permissions(chat_id, CLOSE_CHAT)
@@ -136,7 +139,7 @@ async def close_nightmode():
             await app.send_photo(
                 chat_id,
                 photo="https://telegra.ph//file/14ec9c3ff42b59867040a.jpg",
-                caption="**ɢʀᴏᴜᴘ ɪs ᴏᴘᴇɴɪɴɢ ɢᴏᴏᴅ ᴍᴏʀɴɪɴɢ ᴇᴠᴇʀʏᴏɴᴇ !\n\nᴍᴀʏ ᴛʜɪs ᴅᴀʏ ᴄᴏᴍᴇ ᴡɪᴛʜ ᴀʟʟ ᴛʜᴇ ʟᴏᴠᴇ ʏᴏᴜʀ ʜᴇᴀʀᴛ ᴄᴀɴ ʜᴏʟᴅ.**",
+                caption="**ɢʀᴏᴜᴘ ɪs ᴏᴘᴇɴɪɴɢ ɢᴏᴏᴅ ᴍᴏʀɴɪɴɢ ᴇᴠᴇʀʏᴏɴᴇ !\n\nᴍᴀʏ ᴛʜɪs ᴅᴀʏ ᴄᴏᴍᴇ ᴡɪᴛʜ ᴀʟʟ ᴛʜᴇ ʟᴏᴠᴇ ʏᴏᴜʀ ʜᴇᴀʀᴛ ᴄᴀɴ ʜᴏʟᴅ ᴀɴᴅ ʙʀɪɴɢ ʏᴏᴜ ᴇᴠᴇʀʏ sᴜᴄᴄᴇss ʏᴏᴜ ᴅᴇsɪʀᴇ. Mᴀʏ ᴇᴀᴄʜ ᴏғ ʏᴏᴜʀ ғᴏᴏᴛsᴛᴇᴘs ʙʀɪɴɢ Jᴏʏ ᴛᴏ ᴛʜᴇ ᴇᴀʀᴛʜ ᴀɴᴅ ʏᴏᴜʀsᴇʟғ. ɪ ᴡɪsʜ ʏᴏᴜ ᴀ ᴍᴀɢɪᴄᴀʟ ᴅᴀʏ ᴀɴᴅ ᴀ ᴡᴏɴᴅᴇʀғᴜʟ ʟɪғᴇ ᴀʜᴇᴀᴅ.**",
                 reply_markup=add_buttons,
             )
             await app.set_chat_permissions(chat_id, OPEN_CHAT)
@@ -145,9 +148,14 @@ async def close_nightmode():
 
 # --- SCHEDULER ---
 scheduler = AsyncIOScheduler(timezone="Asia/Kolkata")
-scheduler.add_job(start_nightmode, trigger="cron", hour=0, minute=0) # 12 AM
-scheduler.add_job(close_nightmode, trigger="cron", hour=6, minute=0) # 6 AM
+
+# Raat ko 12 AM (00:00) band karne ke liye
+scheduler.add_job(start_nightmode, trigger="cron", hour=0, minute=0)
+
+# Subah 6 AM (06:00) kholne ke liye
+scheduler.add_job(close_nightmode, trigger="cron", hour=6, minute=0)
+
 scheduler.start()
 
 __MODULE__ = "Nɪɢʜᴛᴍᴏᴅᴇ"
-__HELP__ = "/nightmode - Enable/Disable automatic group closing."
+__HELP__ = "/nightmode - [Owner Only] Control automatic group closing with full messages."
