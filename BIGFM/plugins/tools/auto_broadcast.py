@@ -28,7 +28,7 @@ High-Fidelity (Hi-Fi) Streaming quality.
 <a href="https://t.me/SHYAMVIBEBOT?startgroup=true">➕ ADD ME TO YOUR GROUP</a>
 """
 
-scheduler = AsyncioScheduler()
+scheduler = asyncioscheduler()
 
 async def auto_broadcast_bigfm(client: Client):
     """Groups aur DMs dono mein automatically message bhejega"""
