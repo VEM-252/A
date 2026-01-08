@@ -8,6 +8,7 @@ from pyrogram.types import (
     InlineKeyboardMarkup,
     Message,
 )
+from pyrogram.errors import MessageNotModified
 
 # Bot ke imports
 from BIGFM import app 
@@ -46,23 +47,21 @@ OPEN_CHAT = ChatPermissions(can_send_messages=True)
 # --- BUTTONS ---
 buttons = InlineKeyboardMarkup(
     [[
-        InlineKeyboardButton("๏ ᴇɴᴀʙʟᴇ ๏", callback_data="global_on"),
-        InlineKeyboardButton("๏ ᴅɪsᴀʙʟᴇ ๏", callback_data="global_off"),
+        InlineKeyboardButton("๏ ᴇɴᴀʙʟᴇ ɢʟᴏʙᴀʟ ๏", callback_data="global_on"),
+        InlineKeyboardButton("๏ ᴅɪsᴀʙʟᴇ ɢʟᴏʙᴀʟ ๏", callback_data="global_off"),
     ]]
 )
 
 add_buttons = InlineKeyboardMarkup(
-    [
-        [
-            InlineKeyboardButton(
-                text="๏ ᴀᴅᴅ ᴍᴇ ɪɴ ɢʀᴏᴜᴘ ๏",
-                url=f"https://t.me/{app.username}?startgroup=true",
-            )
-        ]
-    ]
+    [[
+        InlineKeyboardButton(
+            text="๏ ᴀᴅᴅ ᴍᴇ ɪɴ ɢʀᴏᴜᴘ ๏",
+            url=f"https://t.me/{app.username}?startgroup=true",
+        )
+    ]]
 )
 
-# --- COMMAND ---
+# --- COMMAND (Owner Only) ---
 @app.on_message(filters.command("nightmode") & filters.group)
 async def _nightmode(_, message: Message):
     if not is_owner(message.from_user.id):
@@ -75,19 +74,22 @@ async def _nightmode(_, message: Message):
         reply_markup=buttons,
     )
 
-# --- CALLBACK ---
+# --- CALLBACK (Owner Only) ---
 @app.on_callback_query(filters.regex("^(global_on|global_off)$"))
 async def nightcb(_, query: CallbackQuery):
     if not is_owner(query.from_user.id):
         return await query.answer("Sirf Bot Owner ke liye hai!", show_alert=True)
 
-    if query.data == "global_on":
-        await global_nightmode_on()
-        await query.message.edit_caption("**✅ Global Nightmode ON ho gaya hai! Ab saare groups 12AM ko band honge.**", reply_markup=buttons)
-    
-    elif query.data == "global_off":
-        await global_nightmode_off()
-        await query.message.edit_caption("**❌ Global Nightmode OFF ho gaya hai!**", reply_markup=buttons)
+    try:
+        if query.data == "global_on":
+            await global_nightmode_on()
+            await query.message.edit_caption("**✅ Global Nightmode ON ho gaya hai! Ab saare groups 12AM ko band honge.**", reply_markup=buttons)
+        
+        elif query.data == "global_off":
+            await global_nightmode_off()
+            await query.message.edit_caption("**❌ Global Nightmode OFF ho gaya hai!**", reply_markup=buttons)
+    except MessageNotModified:
+        await query.answer("Pehle se hi wahi status hai!")
 
 # --- AUTO FUNCTIONS ---
 
@@ -130,6 +132,6 @@ async def close_nightmode():
 
 # --- SCHEDULER ---
 scheduler = AsyncIOScheduler(timezone="Asia/Kolkata")
-scheduler.add_job(start_nightmode, trigger="cron", hour=0, minute=0)
-scheduler.add_job(close_nightmode, trigger="cron", hour=6, minute=0)
+scheduler.add_job(start_nightmode, trigger="cron", hour=0, minute=0) # 12 AM
+scheduler.add_job(close_nightmode, trigger="cron", hour=6, minute=0) # 6 AM
 scheduler.start()
