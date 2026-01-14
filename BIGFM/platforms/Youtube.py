@@ -9,11 +9,11 @@ from pyrogram.types import Message
 from googleapiclient.discovery import build # Official Google API
 
 # --- CONFIGURATION ---
-# WARNING: Apni API Key kisi ko na batayein. 
+# WARNING: Apni API Key ko kisi ke saath share na karein.
 API_KEY = "AIzaSyAfG6kmGSSS0p2NM5nrMoGlhxit1whQvPk" 
 
 # Global instance of YouTube API 
-# static_discovery=False lagane se auth error nahi aayega
+# static_discovery=False lagane se "Default Credentials" wala error nahi aayega
 youtube = build("youtube", "v3", developerKey=API_KEY, static_discovery=False)
 
 async def shell_cmd(cmd):
@@ -30,7 +30,7 @@ async def shell_cmd(cmd):
             return errorz.decode("utf-8")
     return out.decode("utf-8")
 
-# Cookies handling for yt-dlp
+# Cookies handling for yt-dlp (Blocking se bachne ke liye)
 cookies_file = "BIGFM/cookies.txt"
 if not os.path.exists(cookies_file):
     cookies_file = None
@@ -42,7 +42,7 @@ class YouTubeAPI:
         self.listbase = "https://youtube.com/playlist?list="
 
     def parse_duration(self, duration):
-        """ISO 8601 duration (PT4M13S) ko MM:SS mein convert karta hai"""
+        """ISO 8601 duration format ko seconds aur string mein badalta hai"""
         match = re.search(r'PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?', duration)
         hours = int(match.group(1) or 0)
         minutes = int(match.group(2) or 0)
@@ -139,17 +139,18 @@ class YouTubeAPI:
         return track_details, vidid
 
     async def video(self, link: str, videoid: Union[bool, str] = None):
-        """vplay ke liye optimized function"""
+        """vplay FIX: 480p resolution for smooth audio and no stuttering"""
         if videoid:
             link = self.base + link
         
-        # Format ko MP4 aur 480p/720p pe set kiya hai taaki smooth chale
+        # 480p is the most stable for Telegram Bot streaming
         opts = [
             "yt-dlp", 
             "-g", 
-            "-f", "best[height<=?720][ext=mp4]/best", 
+            "-f", "best[height<=?480][ext=mp4]/best", 
             "--geo-bypass",
             "--no-playlist",
+            "--buffer-size", "16k",
             f"{link}"
         ]
         if cookies_file:
@@ -228,7 +229,7 @@ class YouTubeAPI:
                 return path
 
         def video_dl():
-            ydl_opts = {**common_opts, "format": "best[height<=?720][ext=mp4]", "outtmpl": "downloads/%(id)s.%(ext)s"}
+            ydl_opts = {**common_opts, "format": "best[height<=?480][ext=mp4]", "outtmpl": "downloads/%(id)s.%(ext)s"}
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(link, False)
                 path = os.path.join("downloads", f"{info['id']}.{info['ext']}")
