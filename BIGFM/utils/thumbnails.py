@@ -3,22 +3,23 @@ import re
 import aiofiles
 import aiohttp
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
-# Yahan badlav kiya gaya hai:
-from youtubesearchpython.__future__ import VideosSearch 
-
+from youtubesearchpython.__future__ import VideosSearch # Correct import
 from config import YOUTUBE_IMG_URL
 
-# ... baaki ka code waisa hi rahega ...
-# Image resize karne ke liye helper function
+# Helper function for resizing
 def resize_image(image, width, height):
     return image.resize((width, height), Image.LANCZOS)
 
-async def get_thumb(videoid):
+# Function name changed to gen_thumb to fix ImportError
+async def gen_thumb(videoid):
     cache_path = f"cache/{videoid}.png"
     temp_path = f"cache/thumb{videoid}.png"
     
     if os.path.isfile(cache_path):
         return cache_path
+
+    if not os.path.exists("cache"):
+        os.makedirs("cache")
 
     url = f"https://www.youtube.com/watch?v={videoid}"
     try:
@@ -41,34 +42,31 @@ async def get_thumb(videoid):
                     async with aiofiles.open(temp_path, mode="wb") as f:
                         await f.write(await resp.read())
 
-        # Process Image
+        # Image Processing
         youtube = Image.open(temp_path).convert("RGBA")
         
-        # Colors
         GLOW_COLOR = "#ff0099" 
         BORDER_COLOR = "#FF1493"
 
-        # Background Setup (Blurred)
+        # Background
         bg = resize_image(youtube, 1280, 720)
         bg = bg.filter(ImageFilter.GaussianBlur(25))
         bg = ImageEnhance.Brightness(bg).enhance(0.3)
 
-        # Main Thumbnail Setup
+        # Main Thumbnail
         thumb_width, thumb_height = 840, 460
         main_thumb = resize_image(youtube, thumb_width, thumb_height)
         
-        # Rounded corners for main thumb
         mask = Image.new("L", (thumb_width, thumb_height), 0)
         draw_mask = ImageDraw.Draw(mask)
         draw_mask.rounded_rectangle([(0, 0), (thumb_width, thumb_height)], radius=25, fill=255)
         main_thumb.putalpha(mask)
 
-        # Positions
         center_x, center_y = 640, 320
         thumb_x = center_x - (thumb_width // 2)
         thumb_y = center_y - (thumb_height // 2)
 
-        # Glow Effect
+        # Glow
         glow_layer = Image.new("RGBA", (1280, 720), (0, 0, 0, 0))
         draw_glow = ImageDraw.Draw(glow_layer)
         draw_glow.rounded_rectangle(
@@ -86,46 +84,25 @@ async def get_thumb(videoid):
             radius=30, fill=BORDER_COLOR
         )
         bg.paste(border_layer, (0, 0), border_layer)
-
-        # Paste Main Thumbnail
         bg.paste(main_thumb, (thumb_x, thumb_y), main_thumb)
 
-        # Drawing Text
         draw = ImageDraw.Draw(bg)
         
-        # Font Loading
         try:
             font_title = ImageFont.truetype("BIGFM/assets/font.ttf", 45)
             font_details = ImageFont.truetype("BIGFM/assets/font2.ttf", 30)
-            font_wm = ImageFont.truetype("BIGFM/assets/font2.ttf", 25)
         except:
             font_title = ImageFont.load_default()
             font_details = ImageFont.load_default()
-            font_wm = ImageFont.load_default()
 
-        # Title Handling
         if len(title) > 40:
             title = title[:37] + "..."
 
-        # Text Centering Logic (Pillow 10+ compatible)
-        def get_text_center(text, font, img_w):
-            bbox = draw.textbbox((0, 0), text, font=font)
-            return (img_w - (bbox[2] - bbox[0])) / 2
+        # Draw Title and Stats
+        draw.text((320, 580), title, fill="white", font=font_title)
+        stats_text = f"Views: {views} | Duration: {duration}"
+        draw.text((320, 640), stats_text, fill=BORDER_COLOR, font=font_details)
 
-        # Draw Title
-        title_x = get_text_center(title, font_title, 1280)
-        draw.text((title_x, 580), title, fill="white", font=font_title, stroke_width=2, stroke_fill="black")
-
-        # Draw Stats
-        stats_text = f"Views: {views} | Duration: {duration} | Bot: @aashikmusicbot"
-        stats_x = get_text_center(stats_text, font_details, 1280)
-        draw.text((stats_x, 640), stats_text, fill=BORDER_COLOR, font=font_details)
-
-        # Watermarks
-        draw.text((30, 30), "AloneMusic", fill="yellow", font=font_wm, stroke_width=1, stroke_fill="black")
-        draw.text((1120, 680), "AloneMusic", fill="white", font=font_wm, alpha=150)
-
-        # Clean up and Save
         if os.path.exists(temp_path):
             os.remove(temp_path)
             
@@ -133,9 +110,10 @@ async def get_thumb(videoid):
         return cache_path
 
     except Exception as e:
-        print(f"Error generating thumbnail: {e}")
+        print(f"Error: {e}")
         return YOUTUBE_IMG_URL
 
+# Optional: keep this if needed by other files
 async def get_qthumb(vidid):
     try:
         url = f"https://www.youtube.com/watch?v={vidid}"
